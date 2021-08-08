@@ -1,67 +1,71 @@
-using AlgebraOfGraphics
-using CairoMakie
 using CSV
 using Dates
 using DataFrames
 
+const symptoms_dict = Dict(
+    "s01" => "adinamia",
+    "s02" => "ageusia",
+    "s03" => "anosmia",
+    "s04" => "boca azulada",
+    "s05" => "calafrio",
+    "s06" => "cansaço",
+    "s07" => "cefaleia",
+    "s08" => "cianose",
+    "s09" => "coloração azulada no rosto",
+    "s10" => "congestão nasal",
+    "s11" => "conjuntivite",
+    "s12" => "coriza",
+    "s13" => "desconforto respiratório",
+    "s14" => "diarreia",
+    "s15" => "dificuldade para respirar",
+    "s16" => "diminuição do apetite",
+    "s17" => "dispneia",
+    "s18" => "distúrbio gustativo",
+    "s19" => "distúrbio olfativo",
+    "s20" => "dor abdominal",
+    "s21" => "dor de cabeça",
+    "s22" => "dor de garganta",
+    "s23" => "dor no corpo",
+    "s24" => "dor no peito",
+    "s25" => "dor persistente no tórax",
+    "s26" => "erupção cutânea na pele",
+    "s27" => "fadiga",
+    "s28" => "falta de ar",
+    "s29" => "febre",
+    "s30" => "gripe",
+    "s31" => "hiporexia",
+    "s32" => "inapetência",
+    "s33" => "infecção respiratória",
+    "s34" => "lábio azulado",
+    "s35" => "mialgia",
+    "s36" => "nariz entupido",
+    "s37" => "náusea",
+    "s38" => "obstrução nasal",
+    "s39" => "perda de apetite",
+    "s40" => "perda do olfato",
+    "s41" => "perda do paladar",
+    "s42" => "pneumonia",
+    "s43" => "pressão no peito",
+    "s44" => "pressão no tórax",
+    "s45" => "prostração",
+    "s46" => "quadro gripal",
+    "s47" => "quadro respiratório",
+    "s48" => "queda da saturação",
+    "s49" => "resfriado",
+    "s50" => "rosto azulado",
+    "s51" => "saturação baixa",
+    "s52" => "saturação de o2 menor que 95%",
+    "s53" => "síndrome respiratória aguda grave",
+    "s54" => "SRAG",
+    "s55" => "tosse",
+    "s56" => "vômito"
+)
+
+function symptoms_map(x::AbstractString, symptoms_dict::Dict{String, String})
+    return symptoms_dict[x]
+end
+
 # no Twitter não temos s09 s18 s51
 tweets = CSV.read(joinpath(pwd(), "data", "covid_twitter_time_series.csv"), DataFrame)
 transform!(tweets, :n => ByRow(Int); renamecols=false)
-
-describe(tweets)
-unique(tweets.symptoms) |> println
-
-# Sintomas totais
-total_tweets = combine(groupby(tweets, :symptoms), :n => sum)
-sort(total_tweets, :n_sum; rev=true)
-
-
-# Pure Makie Implementation
-# still need to figure out color palette
-xs = min(tweets.date...):Day(1):max(tweets.date...)
-months = min(tweets.date...):Month(1):max(tweets.date...)
-lentime = length(xs)
-slice_dates = 1:90:lentime
-y_dor_de_cabeca = filter(row -> row.symptoms == "s21", tweets).n
-y_cansaco = filter(row -> row.symptoms =="s06", tweets).n
-
-# Gráfico
-resolution = (800, 600)
-f = Figure(; resolution)
-ax = Axis(f[1,1];
-          xlabel = "Data",
-          ylabel = "Frequência em milhares")
-l1 = lines!(ax, 1:length(xs), y_cansaco; color=:blue, label="cansaço")
-l2 = lines!(ax, 1:length(xs), y_dor_de_cabeca; color=:red, label="dor de cabeca")
-ax.xticks = (slice_dates, Dates.format.(xs, dateformat"mm-yy")[slice_dates])
-ax.xticklabelrotation = π/4
-ax.xlabelpadding = 4.0
-axislegend("Sintoma"; position=:ct, orientation=:horizontal)
-f
-
-# AoG Implementation
-# still need to figure out how to have more xticks
-
-# Somente s21 e s06
-n_21_06 = filter(row -> row.symptoms == "s21" || row.symptoms == "s06", tweets)
-
-# Gráfico
-resolution = (800, 600)
-f = Figure(; resolution)
-n_21_06 = filter(row -> row.symptoms == "s21" || row.symptoms == "s06", tweets)
-plt = data(n_21_06) *
-        mapping(:date=>"Data",
-                :n=>(x -> x / 1_000) => "Frequência em milhares",
-                color=:symptoms => renamer("s21" => "dor de cabeça", "s06" => "cansaço") => "Sintomas") *
-        visual(Lines)
-
-# dateticks = min(n_21_06.date...):Month(6):max(n_21_06.date...) |> collect
-ag = draw!(f, plt;
-           axis=(;
-           title = "Frequência de sintomas no Twitter",
-           titlesize=20,
-           xticklabelrotation=π/4,
-           xlabelpadding=4.0
-           ))
-legend!(f[end+1, 1], ag; orientation=:horizontal, tellheight=true, tellwidth=false)
-f
+transform!(tweets, :symptoms => ByRow(x -> symptoms_map(x, symptoms_dict)) => :symptoms_detail)
