@@ -7,7 +7,15 @@ Este projeto é um projeto de pesquisa do [LabCidades](https://github.com/LabCid
 ## Dados
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5073680.svg)](https://doi.org/10.5281/zenodo.5073680)
 
-Os dados do projeto podem ser encontrados em [10.5281/zenodo.5073680](https://doi.org/10.5281/zenodo.5073680).
+Os dados do twitter podem ser encontrados em [10.5281/zenodo.5073680](https://doi.org/10.5281/zenodo.5073680).
+
+As bases SRAG do SUS podem ser acessadas em:
+* [SRAG 2019](https://opendatasus.saude.gov.br/dataset/bd-srag-2019)
+* [SRAG 2020](https://opendatasus.saude.gov.br/dataset/bd-srag-2020)
+* [SRAG 2021](https://opendatasus.saude.gov.br/dataset/bd-srag-2021)
+
+
+As funções `download_twitter` e `download_srag` no arquivo `src/get_data.jl` fazem o download automático dos dados necessários para a reprodução das análises e código desse repositório.
 
 ## Código dos Sintomas
 
