@@ -10,7 +10,7 @@ sort!(total_tweets, :n_sum; rev=true)
 rename!(total_tweets, :symptom_detail => :Sintomas, :n_sum => :Tweets)
 top_15_tweets = total_tweets[1:15, :]
 
-formatter = (v, i, j) -> j == 2 ? string(round(v / 1_000_000; digits=3)) * " mi" : j
+formatter = (v, i, j) -> j == 2 ? string(round(v / 1_000_000; digits=3)) * " mi" : v
 
 pretty_table(top_15_tweets;
              nosubheader=true,
