@@ -61,11 +61,24 @@ const symptoms_dict = Dict(
     "s56" => "vômito"
 )
 
-function symptoms_map(x::AbstractString, symptoms_dict::Dict{String, String})
+function symptom_map(x::AbstractString, symptoms_dict::Dict{String, String})
     return symptoms_dict[x]
 end
 
 # no Twitter não temos s09 s18 s51
 tweets = CSV.read(joinpath(pwd(), "data", "covid_twitter_time_series.csv"), DataFrame)
 transform!(tweets, :n => ByRow(Int); renamecols=false)
-transform!(tweets, :symptoms => ByRow(x -> symptoms_map(x, symptoms_dict)) => :symptoms_detail)
+transform!(tweets, :symptom => ByRow(x -> symptom_map(x, symptoms_dict)) => :symptom_detail)
+
+# SRAG temos todos symptoms
+srag = CSV.read(joinpath(pwd(), "data", "SRAG_time_series.csv"), DataFrame)
+sort!(srag, [:date, :symptom])
+transform!(srag, :tweet => ByRow(Int); renamecols=false)
+unique(srag.hospital)
+
+# Checagem básica
+total_tweets = combine(groupby(tweets, [:date, :symptom]), :n => sum => :n)
+total_srag = combine(
+    groupby(
+        filter(row -> row.hospital == "ent", srag),
+        [:date, :symptom]), :tweet => sum => :n)

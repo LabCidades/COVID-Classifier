@@ -9,8 +9,8 @@ xs = min(tweets.date...):Day(1):max(tweets.date...)
 months = min(tweets.date...):Month(1):max(tweets.date...)
 lentime = length(xs)
 slice_dates = 1:90:lentime
-y_dor_de_cabeca = filter(row -> row.symptoms == "s21", tweets).n
-y_cansaco = filter(row -> row.symptoms =="s06", tweets).n
+y_dor_de_cabeca = filter(row -> row.symptom == "s21", tweets).n
+y_cansaco = filter(row -> row.symptom =="s06", tweets).n
 
 # Gráfico
 resolution = (800, 600)
@@ -30,7 +30,7 @@ f
 # you need AlgebraOfGraphics#master for this
 
 # Somente s21 e s06
-n_21_06 = filter(row -> row.symptoms == "s21" || row.symptoms == "s06", tweets)
+n_21_06 = filter(row -> row.symptom == "s21" || row.symptom == "s06", tweets)
 months = min(tweets.date...):Month(3):max(tweets.date...)
 dateticks = AlgebraOfGraphics.datetimeticks(x -> Dates.format(x, dateformat"mm-yy"), months) # pass formatting function and list of date ticks
 # Gráfico
@@ -39,7 +39,7 @@ f = Figure(; resolution)
 plt = data(n_21_06) *
         mapping(:date=>"Data",
                 :n => "",
-                color=:symptoms => renamer("s21" => "dor de cabeça", "s06" => "cansaço") => "Sintomas") *
+                color=:symptom => renamer("s21" => "dor de cabeça", "s06" => "cansaço") => "Sintomas") *
         visual(Lines)
 
 ag = draw!(f, plt;
