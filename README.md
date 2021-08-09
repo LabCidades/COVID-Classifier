@@ -70,6 +70,16 @@ s54 | SRAG
 s55 | tosse
 s56 | vômito
 
+## Códigos SRAG `hospital`
+
+Código | Descrição
+--- | ---
+`pri` | primeiros sintomas
+`int` | hospitalização por SRAG
+`ent` | entrada na UTI
+`sai` | saída da UTI
+`evo` | alta
+
 ## Equipe
 
 * Pesquisador Responsável: [Jose Storopoli](https://github.com/storopoli)
