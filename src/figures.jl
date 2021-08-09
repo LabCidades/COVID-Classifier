@@ -55,6 +55,7 @@ legend!(f[end+1, 1], ag; orientation=:horizontal, tellheight=true, tellwidth=fal
 f
 
 # Sintomas SRAG vs Twitter
+# TODO: Adicionar um vline! em 01/01/2021 - Vacinação
 function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets, df_srag=srag)
     symptoms_dict = Dict(
         "s01" => "adinamia",
@@ -125,16 +126,17 @@ function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets, df
     symptom_df = stack(
         filter(row -> row.symptom == string(symptom) && row.hospital == hospital, df),
         [:srag, :n])
+    transform!(symptom_df, :value => ByRow(x -> Int(x)); renamecols=false)
     months = min(symptom_df.date...):Month(3):max(symptom_df.date...)
     dateticks = AlgebraOfGraphics.datetimeticks(x -> Dates.format(x, dateformat"mm-yy"), months) # pass formatting function and list of date ticks
     # Gráfico
     resolution = (800, 600)
     f = Figure(; resolution)
     plt = data(symptom_df) *
-        mapping(:date=>"Data",
-                :value => "",
-                color=:variable => renamer("srag" => hospital_dict[hospital], "n" => "Tweets com Sintoma") => "Cor") *
-        visual(Lines)
+            mapping(:date=>"Data",
+                    :value => "",
+                    color=:variable => renamer("srag" => hospital_dict[hospital], "n" => "Tweets com Sintoma") => "Cor") *
+            visual(Lines)
 
     ag = draw!(f, plt;
                axis=(;

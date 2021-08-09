@@ -2,6 +2,8 @@ using CSV
 using Dates
 using DataFrames
 
+include(joinpath(pwd(), "src", "get_data.jl"))
+
 const symptoms_dict = Dict(
     "s01" => "adinamia",
     "s02" => "ageusia",
@@ -77,8 +79,11 @@ transform!(srag, :tweet => ByRow(Int); renamecols=false)
 unique(srag.hospital)
 
 # Checagem básica
+total_esperado = length(unique(df.symptom)) * length(Date("2019-01-01"):Day(1):Date("2021-06-30"))
 total_tweets = combine(groupby(tweets, [:date, :symptom]), :n => sum => :n)
 total_srag = combine(
     groupby(
         filter(row -> row.hospital == "ent", srag),
         [:date, :symptom]), :tweet => sum => :n)
+
+# TODO: Agrupar por semana para suavizar os picos
