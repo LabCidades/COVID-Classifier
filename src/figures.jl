@@ -27,7 +27,7 @@ axislegend("Sintoma"; position=:ct, orientation=:horizontal)
 f
 
 # AoG Implementation
-# you need AlgebraOfGraphics#master for this
+# you need AlgebraOfGraphics version 0.5.1 for this
 
 # Somente s21 e s06
 n_21_06 = filter(row -> row.symptom == "s21" || row.symptom == "s06", tweets)
@@ -56,7 +56,7 @@ f
 
 # Sintomas SRAG vs Twitter
 # TODO: Adicionar um vline! em 01/01/2021 - Vacinação
-function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets, df_srag=srag)
+function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets_week, df_srag=srag_week)
     symptoms_dict = Dict(
         "s01" => "adinamia",
         "s02" => "ageusia",
@@ -122,12 +122,12 @@ function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets, df
         "sai" => "Saída da UTI",
         "evo" => "Alta"
     )
-    df = leftjoin(select(df_srag, Not(:tweet)), df_tweets; on=[:date, :symptom])
+    df = leftjoin(df_srag, df_tweets; on=[:date, :date_year, :date_week, :symptom, :symptom_detail])
     symptom_df = stack(
         filter(row -> row.symptom == string(symptom) && row.hospital == hospital, df),
         [:srag, :n])
     transform!(symptom_df, :value => ByRow(x -> Int(x)); renamecols=false)
-    months = min(symptom_df.date...):Month(3):max(symptom_df.date...)
+    months = min(symptom_df.date...):Month(1):max(symptom_df.date...)
     dateticks = AlgebraOfGraphics.datetimeticks(x -> Dates.format(x, dateformat"mm-yy"), months) # pass formatting function and list of date ticks
     # Gráfico
     resolution = (800, 600)

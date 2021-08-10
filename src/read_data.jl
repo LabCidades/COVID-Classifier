@@ -2,8 +2,6 @@ using CSV
 using Dates
 using DataFrames
 
-include(joinpath(pwd(), "src", "get_data.jl"))
-
 const symptoms_dict = Dict(
     "s01" => "adinamia",
     "s02" => "ageusia",
@@ -75,15 +73,27 @@ transform!(tweets, :symptom => ByRow(x -> symptom_map(x, symptoms_dict)) => :sym
 # SRAG temos todos symptoms
 srag = CSV.read(joinpath(pwd(), "data", "SRAG_time_series.csv"), DataFrame)
 sort!(srag, [:date, :symptom])
-transform!(srag, :tweet => ByRow(Int); renamecols=false)
-unique(srag.hospital)
+select!(srag, Not(:tweet))
+transform!(srag, :srag => ByRow(Int); renamecols=false)
+transform!(srag, :symptom => ByRow(x -> symptom_map(x, symptoms_dict)) => :symptom_detail)
 
 # Checagem básica
-total_esperado = length(unique(df.symptom)) * length(Date("2019-01-01"):Day(1):Date("2021-06-30"))
-total_tweets = combine(groupby(tweets, [:date, :symptom]), :n => sum => :n)
-total_srag = combine(
-    groupby(
-        filter(row -> row.hospital == "ent", srag),
-        [:date, :symptom]), :tweet => sum => :n)
+# Uma vez que isso aqui estiver OK podemos remover todo esse bloco
+total_esperado = length(unique(tweets.symptom)) * length(Date("2019-01-01"):Day(1):Date("2021-06-30"))
+total_tweets = combine(groupby(tweets, [:date, :symptom, :symptom_detail]), :n => sum => :n)
 
 # TODO: Agrupar por semana para suavizar os picos
+transform!(tweets,
+          :date => ByRow(year) => :date_year,
+          :date => ByRow(week) => :date_week)
+tweets_week = combine(
+    groupby(tweets, [:date_year, :date_week, :symptom, :symptom_detail]),
+    :date => first => :date,
+    :n => sum => :n)
+transform!(srag,
+          :date => ByRow(year) => :date_year,
+          :date => ByRow(week) => :date_week)
+srag_week = combine(
+    groupby(srag, [:date_year, :date_week, :symptom, :symptom_detail, :hospital]),
+    :date => first => :date,
+    :srag => sum => :srag)
