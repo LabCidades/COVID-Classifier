@@ -8,7 +8,7 @@ function download_srag(; output_file="srag_raw")
         "2020" => "https://s3-sa-east-1.amazonaws.com/ckan.saude.gov.br/SRAG/2020/INFLUD-02-08-2021.csv",
         "2021" => "https://s3-sa-east-1.amazonaws.com/ckan.saude.gov.br/SRAG/2021/INFLUD21-02-08-2021.csv"]
 
-    for url ∈ urls
+    Threads.@threads for url ∈ urls
         filename = output_file * "_$(url.first).csv"
         !isfile(filename) ? download(url.second, filename) : nothing
     end
@@ -23,7 +23,7 @@ function download_twitter(; output_file="twitter_raw")
         "2020" => "https://zenodo.org/record/5073680/files/Brazil_Portuguese_COVID19_Tweets2020.csv?download=1",
         "2021" => "https://zenodo.org/record/5073680/files/Brazil_Portuguese_COVID19_Tweets2021.csv?download=1"]
 
-    for url ∈ urls
+    Threads.@threads for url ∈ urls
         filename = output_file * "_$(url.first).csv"
         !isfile(filename) ? download(url.second, filename) : nothing
     end
