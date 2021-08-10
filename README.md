@@ -1,4 +1,4 @@
-# Classificador se Sintomas do COVID-19
+# Classificador de Sintomas do COVID-19
 
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
 
