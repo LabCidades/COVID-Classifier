@@ -12,7 +12,7 @@ rename!(total_tweets,
         :n_sum => :Tweets)
 top_15_tweets = total_tweets[1:15, :]
 
-formatter_twitter = (v, i, j) -> j == 3 ? string(round(v / 1_000_000; digits=3)) * " mi" : v
+formatter_twitter = (v, i, j) -> j == 3 ? replace(string(round(v / 1_000_000; digits=2)) * " mi", "." => ",") : v
 
 pretty_table(top_15_tweets;
              nosubheader=true,
@@ -32,9 +32,16 @@ rename!(total_srag,
         "evo_sum" => "Alta")
 top_30_srag = total_srag[1:30, :]
 
-formatter_srag = (v, i, j) -> j ≥ 3 ? string(round(v / 1_000_000; digits=3)) * " mi" : v
+formatter_srag_million = (v, i, j) -> j ≥ 3 ? replace(string(round(v / 1_000_000; digits=2)) * " mi", "." => ",") : v
+formatter_srag_thousands = (v, i, j) -> j ≥ 3 ? replace(string(round(v / 1_000; digits=1)) * " mil", "." => ",") : v
 
 pretty_table(top_30_srag;
              nosubheader=true,
              title="Top-30 sintomas SRAG",
-             formatters=formatter_srag)
+             formatters=formatter_srag_thousands)
+
+top_20_all = leftjoin(total_srag[1:20, :], total_tweets, on = [:ID, :Sintomas])
+pretty_table(top_20_all;
+             nosubheader=true,
+             title="Top-20 sintomas SRAG com Twitter",
+             formatters=formatter_srag_million)

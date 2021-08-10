@@ -82,18 +82,40 @@ transform!(srag, :symptom => ByRow(x -> symptom_map(x, symptoms_dict)) => :sympt
 total_esperado = length(unique(tweets.symptom)) * length(Date("2019-01-01"):Day(1):Date("2021-06-30"))
 total_tweets = combine(groupby(tweets, [:date, :symptom, :symptom_detail]), :n => sum => :n)
 
-# TODO: Agrupar por semana para suavizar os picos
+# Outros períodos
 transform!(tweets,
-          :date => ByRow(year) => :date_year,
-          :date => ByRow(week) => :date_week)
+          :date => ByRow(year) => :year,
+          :date => ByRow(month) => :month,
+          :date => ByRow(d -> div(week(d), 2)) => :fortnight,
+          :date => ByRow(week) => :week)
+transform!(srag,
+          :date => ByRow(year) => :year,
+          :date => ByRow(d -> div(week(d), 2)) => :fortnight,
+          :date => ByRow(month) => :month,
+          :date => ByRow(week) => :week)
+
+# Sumários
 tweets_week = combine(
-    groupby(tweets, [:date_year, :date_week, :symptom, :symptom_detail]),
+    groupby(tweets, [:year, :month, :fortnight, :week, :symptom, :symptom_detail]),
     :date => first => :date,
     :n => sum => :n)
-transform!(srag,
-          :date => ByRow(year) => :date_year,
-          :date => ByRow(week) => :date_week)
+tweets_fortnight = combine(
+    groupby(tweets, [:year, :month, :fortnight, :symptom, :symptom_detail]),
+    :date => first => :date,
+    :n => sum => :n)
+tweets_month = combine(
+    groupby(tweets, [:year, :month, :symptom, :symptom_detail]),
+    :date => first => :date,
+    :n => sum => :n)
 srag_week = combine(
-    groupby(srag, [:date_year, :date_week, :symptom, :symptom_detail, :hospital]),
+    groupby(srag, [:year, :month, :week, :symptom, :symptom_detail, :hospital]),
+    :date => first => :date,
+    :srag => sum => :srag)
+srag_fortnight = combine(
+    groupby(srag, [:year, :month, :fortnight, :symptom, :symptom_detail, :hospital]),
+    :date => first => :date,
+    :srag => sum => :srag)
+srag_month = combine(
+    groupby(srag, [:year, :month, :symptom, :symptom_detail, :hospital]),
     :date => first => :date,
     :srag => sum => :srag)

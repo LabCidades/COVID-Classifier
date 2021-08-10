@@ -3,60 +3,10 @@ using CairoMakie
 
 include(joinpath(pwd(), "src", "read_data.jl"))
 
-# Pure Makie Implementation
-# still need to figure out color palette
-xs = min(tweets.date...):Day(1):max(tweets.date...)
-months = min(tweets.date...):Month(1):max(tweets.date...)
-lentime = length(xs)
-slice_dates = 1:90:lentime
-y_dor_de_cabeca = filter(row -> row.symptom == "s21", tweets).n
-y_cansaco = filter(row -> row.symptom =="s06", tweets).n
-
-# Gráfico
-resolution = (800, 600)
-f = Figure(; resolution)
-ax = Axis(f[1,1];
-          xlabel = "Data",
-          ylabel = "Frequência em milhares")
-l1 = lines!(ax, 1:length(xs), y_cansaco; color=:blue, label="cansaço")
-l2 = lines!(ax, 1:length(xs), y_dor_de_cabeca; color=:red, label="dor de cabeca")
-ax.xticks = (slice_dates, Dates.format.(xs, dateformat"mm-yy")[slice_dates])
-ax.xticklabelrotation = π/4
-ax.xlabelpadding = 4.0
-axislegend("Sintoma"; position=:ct, orientation=:horizontal)
-f
-
-# AoG Implementation
 # you need AlgebraOfGraphics version 0.5.1 for this
-
-# Somente s21 e s06
-n_21_06 = filter(row -> row.symptom == "s21" || row.symptom == "s06", tweets)
-months = min(tweets.date...):Month(3):max(tweets.date...)
-dateticks = AlgebraOfGraphics.datetimeticks(x -> Dates.format(x, dateformat"mm-yy"), months) # pass formatting function and list of date ticks
-# Gráfico
-resolution = (800, 600)
-f = Figure(; resolution)
-plt = data(n_21_06) *
-        mapping(:date=>"Data",
-                :n => "",
-                color=:symptom => renamer("s21" => "dor de cabeça", "s06" => "cansaço") => "Sintomas") *
-        visual(Lines)
-
-ag = draw!(f, plt;
-           axis=(;
-           title = "Frequência de sintomas no Twitter",
-           titlesize=20,
-           xticklabelrotation=π/4,
-           xlabelpadding=4.0,
-           xticks=dateticks,
-           ytickformat=(x -> string.(x ./ 1_000) .* "K")
-           ))
-legend!(f[end+1, 1], ag; orientation=:horizontal, tellheight=true, tellwidth=false)
-f
-
 # Sintomas SRAG vs Twitter
 # TODO: Adicionar um vline! em 01/01/2021 - Vacinação
-function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets_week, df_srag=srag_week)
+function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets_fortnight, df_srag=srag_fortnight, vaccination=true)
     symptoms_dict = Dict(
         "s01" => "adinamia",
         "s02" => "ageusia",
@@ -122,13 +72,17 @@ function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets_wee
         "sai" => "Saída da UTI",
         "evo" => "Alta"
     )
-    df = leftjoin(df_srag, df_tweets; on=[:date, :date_year, :date_week, :symptom, :symptom_detail])
+    df = leftjoin(df_srag, df_tweets; on=[:date, :year, :month, :fortnight, :symptom, :symptom_detail])
     symptom_df = stack(
         filter(row -> row.symptom == string(symptom) && row.hospital == hospital, df),
         [:srag, :n])
-    transform!(symptom_df, :value => ByRow(x -> Int(x)); renamecols=false)
     months = min(symptom_df.date...):Month(1):max(symptom_df.date...)
-    dateticks = AlgebraOfGraphics.datetimeticks(x -> Dates.format(x, dateformat"mm-yy"), months) # pass formatting function and list of date ticks
+    # pass formatting function and list of date ticks (AoG v 0.5.1)
+    dateticks = AlgebraOfGraphics.datetimeticks(x -> Dates.format(x, dateformat"mm-yy"), months)
+    # Vacinação inicío em 17/01/2021
+    janeiro = findfirst(x -> x == "01-21", dateticks[2])
+    fevereiro = findfirst(x -> x == "02-21", dateticks[2])
+    mid_jan_fev = (dateticks[1][janeiro] + dateticks[1][fevereiro]) / 2
     # Gráfico
     resolution = (800, 600)
     f = Figure(; resolution)
@@ -137,7 +91,6 @@ function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets_wee
                     :value => "",
                     color=:variable => renamer("srag" => hospital_dict[hospital], "n" => "Tweets com Sintoma") => "Cor") *
             visual(Lines)
-
     ag = draw!(f, plt;
                axis=(;
                title = "$(hospital_dict[hospital]) - $(titlecase(symptoms_dict[string(symptom)])) - ($(string(symptom)))",
@@ -147,6 +100,26 @@ function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets_wee
                xticks=dateticks,
                ytickformat=(x -> string.(x ./ 1_000) .* "K")
            ))
+    if vaccination
+        vlines!(f.content[1], mid_jan_fev; color=:red ,linewidth=2) # vacinação
+    end
     legend!(f[end+1, 1], ag; orientation=:horizontal, tellheight=true, tellwidth=false)
     return f
 end
+
+function save_figure(fig::Figure, filename::String, prefix::String; quality=3)
+    save(joinpath(pwd(), "figures", "$(prefix)_$(filename).png"), fig, px_per_unit=quality)
+end
+
+# Top 5 Tweets
+# symptoms_vec = [:s21, :s06, :s29, :s30, :s11, :s28, :s56, :s23, :s22, :s55, :s24, :s49, :s14, :s36, :s42]
+symptoms_vec = [:s21, :s06, :s29, :s30, :s11, :s28]
+hospital_vec = ["pri", "int", "ent", "sai", "evo"]
+symptoms_hospital_vec = Iterators.product(symptoms_vec, hospital_vec) |> collect |> vec
+figures_vec = map(x -> srag_vs_twitter(first(x), last(x)), symptoms_hospital_vec)
+map(
+    (fig, symptom_hospital) -> save_figure(
+                                fig,
+                                string(first(symptom_hospital)) * "_" * string(last(symptom_hospital)),
+                                "srag_twitter", quality=3),
+    figures_vec, symptoms_hospital_vec)
