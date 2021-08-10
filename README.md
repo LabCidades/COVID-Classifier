@@ -14,8 +14,30 @@ As bases SRAG do SUS podem ser acessadas em:
 * [SRAG 2020](https://opendatasus.saude.gov.br/dataset/bd-srag-2020)
 * [SRAG 2021](https://opendatasus.saude.gov.br/dataset/bd-srag-2021)
 
+## Reprodução do Ambiente de Desenvolvimento
 
-As funções `download_twitter` e `download_srag` no arquivo `src/get_data.jl` fazem o download automático dos dados necessários para a reprodução das análises e código desse repositório.
+As funções `download_twitter` e `download_srag` no arquivo `src/get_data.jl` fazem o download automático dos dados; e as funções `process_twitter` e `process_srag` no arquivo `src/process_data.jl` fazem todo o processamento e manipulação de dados necessária para a reprodução das análises e código desse repositório.
+
+Para reproduzir o ambiente de desenvolvimento:
+
+1. [Instale Julia](https://julialang.org/downloads/)
+
+2. Clone o repositório e acesse o diretório raiz:
+   ```bash
+   git clone https://github.com/LabCidades/COVID-Classifier.git
+   cd COVID-Classifier
+   ```
+
+3. Instancie o ambiente julia abrindo uma nova sessão de julia e digitando:
+   ```julia
+   using Pkg
+
+   Pkg.activate(".")
+   Pkg.instantiate()
+   ```
+4. Em um terminal digite:
+   1. `julia --project get_data.jl` para fazer o download dos arquivos de dados do SUS e do Zenodo (OBS: isto baixará cerca de 2.6GB de dados)
+   2. `julia --project process_data.jl` para processar os arquivos de dados
 
 ## Código dos Sintomas
 
