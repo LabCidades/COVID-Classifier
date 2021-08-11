@@ -84,11 +84,13 @@ total_tweets = combine(groupby(tweets, [:date, :symptom, :symptom_detail]), :n =
 
 # Outros períodos
 transform!(tweets,
+          :date => ByRow(datetime2rata) => :date_rata,
           :date => ByRow(year) => :year,
           :date => ByRow(month) => :month,
           :date => ByRow(d -> div(week(d), 2)) => :fortnight,
           :date => ByRow(week) => :week)
 transform!(srag,
+          :date => ByRow(datetime2rata) => :date_rata,
           :date => ByRow(year) => :year,
           :date => ByRow(d -> div(week(d), 2)) => :fortnight,
           :date => ByRow(month) => :month,

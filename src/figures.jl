@@ -1,12 +1,21 @@
 using AlgebraOfGraphics
 using CairoMakie
+using Distributed: pmap
 
 include(joinpath(pwd(), "src", "read_data.jl"))
 
+function minmax_scaler(x::AbstractVector; min=min(x...), max=max(x...))
+    return (x .- min) ./ (max - min)
+end
+
+function range_scaler(x::AbstractVector; a=0, b=1)
+    x = minmax_scaler(x)
+    return (b - a) .*  x .+ a
+end
+
 # you need AlgebraOfGraphics version 0.5.1 for this
 # Sintomas SRAG vs Twitter
-# TODO: Adicionar um vline! em 01/01/2021 - Vacinação
-function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets_fortnight, df_srag=srag_fortnight, vaccination=true)
+function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets, df_srag=srag, vaccination=true, span=0.75, degree=2)
     symptoms_dict = Dict(
         "s01" => "adinamia",
         "s02" => "ageusia",
@@ -72,13 +81,14 @@ function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets_for
         "sai" => "Saída da UTI",
         "evo" => "Alta"
     )
-    df = leftjoin(df_srag, df_tweets; on=[:date, :year, :month, :fortnight, :symptom, :symptom_detail])
+    df = leftjoin(df_srag, df_tweets; on=[:date, :date_rata, :year, :month, :fortnight, :week, :symptom, :symptom_detail])
     symptom_df = stack(
         filter(row -> row.symptom == string(symptom) && row.hospital == hospital, df),
         [:srag, :n])
     months = min(symptom_df.date...):Month(1):max(symptom_df.date...)
     # pass formatting function and list of date ticks (AoG v 0.5.1)
     dateticks = AlgebraOfGraphics.datetimeticks(x -> Dates.format(x, dateformat"mm-yy"), months)
+    transform!(symptom_df, :date_rata => x -> range_scaler(x; a=min(dateticks[1]...), b=max(dateticks[1]...)); renamecols=false)
     # Vacinação inicío em 17/01/2021
     janeiro = findfirst(x -> x == "01-21", dateticks[2])
     fevereiro = findfirst(x -> x == "02-21", dateticks[2])
@@ -87,10 +97,10 @@ function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets_for
     resolution = (800, 600)
     f = Figure(; resolution)
     plt = data(symptom_df) *
-            mapping(:date=>"Data",
+            mapping(:date_rata=>"Data",
                     :value => "",
-                    color=:variable => renamer("srag" => hospital_dict[hospital], "n" => "Tweets com Sintoma") => "Cor") *
-            visual(Lines)
+                    color=:variable => renamer("srag" => hospital_dict[hospital], "n" => "Tweets com Sintoma") => "Cor")
+    plt *= smooth(span=span, degree=degree)
     ag = draw!(f, plt;
                axis=(;
                title = "$(hospital_dict[hospital]) - $(titlecase(symptoms_dict[string(symptom)])) - ($(string(symptom)))",
@@ -116,7 +126,7 @@ end
 symptoms_vec = [:s21, :s06, :s29, :s30, :s11, :s28]
 hospital_vec = ["pri", "int", "ent", "sai", "evo"]
 symptoms_hospital_vec = Iterators.product(symptoms_vec, hospital_vec) |> collect |> vec
-figures_vec = map(x -> srag_vs_twitter(first(x), last(x)), symptoms_hospital_vec)
+figures_vec = map(x -> srag_vs_twitter(first(x), last(x); span=0.05, degree=20), symptoms_hospital_vec)
 map(
     (fig, symptom_hospital) -> save_figure(
                                 fig,
