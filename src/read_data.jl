@@ -66,8 +66,7 @@ function symptom_map(x::AbstractString, symptoms_dict::Dict{String, String})
 end
 
 # no Twitter não temos s09 s18 s51
-tweets = CSV.read(joinpath(pwd(), "data", "covid_twitter_time_series.csv"), DataFrame)
-transform!(tweets, :n => ByRow(Int); renamecols=false)
+tweets = CSV.read(joinpath(pwd(), "data", "twitter_timeseries.csv"), DataFrame)
 transform!(tweets, :symptom => ByRow(x -> symptom_map(x, symptoms_dict)) => :symptom_detail)
 
 # SRAG temos todos symptoms
@@ -76,11 +75,6 @@ sort!(srag, [:date, :symptom])
 select!(srag, Not(:tweet))
 transform!(srag, :srag => ByRow(Int); renamecols=false)
 transform!(srag, :symptom => ByRow(x -> symptom_map(x, symptoms_dict)) => :symptom_detail)
-
-# Checagem básica
-# Uma vez que isso aqui estiver OK podemos remover todo esse bloco
-total_esperado = length(unique(tweets.symptom)) * length(Date("2019-01-01"):Day(1):Date("2021-06-30"))
-total_tweets = combine(groupby(tweets, [:date, :symptom, :symptom_detail]), :n => sum => :n)
 
 # Outros períodos
 transform!(tweets,

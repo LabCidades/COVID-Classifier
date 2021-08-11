@@ -1,6 +1,5 @@
 using AlgebraOfGraphics
 using CairoMakie
-using Distributed: pmap
 
 include(joinpath(pwd(), "src", "read_data.jl"))
 
