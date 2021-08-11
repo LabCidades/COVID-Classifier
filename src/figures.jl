@@ -12,7 +12,7 @@ function range_scaler(x::AbstractVector; a=0, b=1)
     return (b - a) .*  x .+ a
 end
 
-# you need AlgebraOfGraphics version 0.5.1 for this
+# necessário AlgebraOfGraphics versão 0.5.1
 # Sintomas SRAG vs Twitter
 function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets, df_srag=srag, vaccination=true, span=0.75, degree=2)
     symptoms_dict = Dict(
@@ -85,7 +85,7 @@ function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets, df
         filter(row -> row.symptom == string(symptom) && row.hospital == hospital, df),
         [:srag, :n])
     months = min(symptom_df.date...):Month(1):max(symptom_df.date...)
-    # pass formatting function and list of date ticks (AoG v 0.5.1)
+    # passa uma função de formatação e uma lista de ticks e datas (AoG v 0.5.1)
     dateticks = AlgebraOfGraphics.datetimeticks(x -> Dates.format(x, dateformat"mm-yy"), months)
     transform!(symptom_df, :date_rata => x -> range_scaler(x; a=min(dateticks[1]...), b=max(dateticks[1]...)); renamecols=false)
     # Vacinação inicío em 17/01/2021

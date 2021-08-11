@@ -108,7 +108,7 @@ Código | Descrição
 `int` | hospitalização por SRAG
 `ent` | entrada na UTI
 `sai` | saída da UTI
-`evo` | alta
+`evo` | alta ou óbito
 
 ## Equipe
 
