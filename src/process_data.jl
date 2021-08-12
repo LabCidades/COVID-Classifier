@@ -6,13 +6,11 @@ using Unicode
 include(joinpath(pwd(), "src", "get_data.jl"))
 
 # SRAG
-# function process_srag()
-    srag2019 = CSV.read(joinpath(pwd(), "data", "srag_raw_2019.csv"), DataFrame)
-    srag2020 = CSV.read(joinpath(pwd(), "data", "srag_raw_2020.csv"), DataFrame)
-    srag2021 = CSV.read(joinpath(pwd(), "data", "srag_raw_2021.csv"), DataFrame)
+function srag_year(year::Int64)
+    columns_srag = [:DT_NOTIFIC, :DT_SIN_PRI, :DT_INTERNA, :DT_ENTUTI, :DT_SAIDUTI, :DT_EVOLUCA,
+                    :FEBRE, :TOSSE, :GARGANTA, :DISPNEIA, :DESC_RESP, :SATURACAO, :DIARREIA, :VOMITO, :OUTRO_DES]
 
-    # intersect significa concatenar apenas as colunas em comuns
-    srag = vcat(srag2019, srag2020, srag2021; cols=:intersect)
+    srag = CSV.read(joinpath(pwd(), "data", "srag_raw_$year.csv"), DataFrame; dateformat=dateformat"d/m/Y", select=columns_srag)
 
     # Output tem que ser
     # data | hospital | srag
@@ -23,13 +21,12 @@ include(joinpath(pwd(), "src", "get_data.jl"))
     # DT_SAIDUTI (data de saída da UTI)
     # DT_EVOLUCA (data de óbito ou evolução)
 
-    select!(srag, :DT_NOTIFIC,
+    rename!(srag, :DT_NOTIFIC => :date,
                   :DT_SIN_PRI => :pri,
                   :DT_INTERNA => :int,
                   :DT_ENTUTI => :ent,
                   :DT_SAIDUTI => :sai,
-                  :DT_EVOLUCA => :evo,
-                  :FEBRE, :TOSSE, :GARGANTA, :DISPNEIA, :DESC_RESP, :SATURACAO, :DIARREIA, :VOMITO, :OUTRO_DES)
+                  :DT_EVOLUCA => :evo)
     srag_pri = select(filter(row -> !ismissing(row.pri), srag), :pri, Between(:FEBRE, :OUTRO_DES))
     srag_int = select(filter(row -> !ismissing(row.int), srag), :int, Between(:FEBRE, :OUTRO_DES))
     srag_ent = select(filter(row -> !ismissing(row.ent), srag), :ent, Between(:FEBRE, :OUTRO_DES))
@@ -101,6 +98,7 @@ include(joinpath(pwd(), "src", "get_data.jl"))
         "s54" => "SRAG",
     )
 
+    # coalesce para 9 que é não informado
     for df ∈ [srag_pri, srag_int, srag_ent, srag_sai, srag_evo]
         for symptom ∈ symptoms_srag
             transform!(df, symptom.first => ByRow(x -> coalesce(x, 9) == 1) => symptom.second)
@@ -126,44 +124,53 @@ include(joinpath(pwd(), "src", "get_data.jl"))
     srag_evo_long = filter(row -> row.value_to_keep == true, stack(srag_evo, symptoms_cols, variable_name=:symptom, value_name=:value_to_keep))
 
     # agrupa os srag por data e tipo de SRAG
-    pri_final = combine(groupby(srag_pri_long, [:pri, :symptom]), :pri, :symptom, nrow => :srag)
-    int_final = combine(groupby(srag_int_long, [:int, :symptom]), :int, :symptom, nrow => :srag)
-    ent_final = combine(groupby(srag_ent_long, [:ent, :symptom]), :ent, :symptom, nrow => :srag)
-    sai_final = combine(groupby(srag_sai_long, [:sai, :symptom]), :sai, :symptom, nrow => :srag)
-    evo_final = combine(groupby(srag_evo_long, [:evo, :symptom]), :evo, :symptom, nrow => :srag)
-    transform!(pri_final, :pri => ByRow(x -> Date(x, dateformat"d/m/Y")) => :date)
-    transform!(int_final, :int => ByRow(x -> Date(x, dateformat"d/m/Y")) => :date)
-    transform!(ent_final, :ent => ByRow(x -> Date(x, dateformat"d/m/Y")) => :date)
-    transform!(sai_final, :sai => ByRow(x -> Date(x, dateformat"d/m/Y")) => :date)
-    transform!(evo_final, :evo => ByRow(x -> Date(x, dateformat"d/m/Y")) => :date)
-    df_pri_final = combine(groupby(pri_final, [:date, :symptom]), :srag => sum => :srag)
-    df_int_final = combine(groupby(int_final, [:date, :symptom]), :srag => sum => :srag)
-    df_ent_final = combine(groupby(ent_final, [:date, :symptom]), :srag => sum => :srag)
-    df_sai_final = combine(groupby(sai_final, [:date, :symptom]), :srag => sum => :srag)
-    df_evo_final = combine(groupby(evo_final, [:date, :symptom]), :srag => sum => :srag)
+    pri_final = combine(groupby(srag_pri_long, [:pri, :symptom]), nrow => :srag)
+    rename!(pri_final, :pri => :date)
+    int_final = combine(groupby(srag_int_long, [:int, :symptom]), nrow => :srag)
+    rename!(int_final, :int => :date)
+    ent_final = combine(groupby(srag_ent_long, [:ent, :symptom]), nrow => :srag)
+    rename!(ent_final, :ent => :date)
+    sai_final = combine(groupby(srag_sai_long, [:sai, :symptom]), nrow => :srag)
+    rename!(sai_final, :sai => :date)
+    evo_final = combine(groupby(srag_evo_long, [:evo, :symptom]), nrow => :srag)
+    rename!(evo_final, :evo => :date)
 
     # define o tipo de srag na coluna hospital de cada df de srag
-    df_pri_final[!, :hospital] .= "pri"
-    df_int_final[!, :hospital] .= "int"
-    df_ent_final[!, :hospital] .= "ent"
-    df_sai_final[!, :hospital] .= "sai"
-    df_evo_final[!, :hospital] .= "evo"
+    pri_final[!, :hospital] .= "pri"
+    int_final[!, :hospital] .= "int"
+    ent_final[!, :hospital] .= "ent"
+    sai_final[!, :hospital] .= "sai"
+    evo_final[!, :hospital] .= "evo"
+
 
     # juntar tudo
-    df_count = vcat(df_pri_final, df_int_final, df_ent_final, df_sai_final, df_evo_final)
+    df_count = vcat(pri_final, int_final, ent_final, sai_final, evo_final)
     # transform!(df_count, :date => ByRow(x -> Date(x, dateformat"d/m/Y")); renamecols=false)
 
     # cria um dataframe para todas as datas e sintomas
-    df_dates = DataFrame(date=Date("2019-01-01"):Day(1):Date("2021-06-30"))
+    if year == 2019
+        df_dates = DataFrame(date=Date("2019-01-01"):Day(1):Date("2019-12-31"))
+    elseif year == 2020
+        df_dates = DataFrame(date=Date("2020-01-01"):Day(1):Date("2020-12-31"))
+    elseif year == 2021
+        df_dates = DataFrame(date=Date("2021-01-01"):Day(1):Date("2021-06-30"))
+    end
     df_hospitals = DataFrame(hospital=["pri", "int", "ent", "sai", "evo"])
-    df_symptoms = DataFrame(symptom=unique(df_count.symptom))
+    df_symptoms = DataFrame(symptom=string.(keys(missing_symptoms_dict) ∪ last.(symptoms_srag)))
     df_union = crossjoin(df_dates, df_hospitals, df_symptoms)
+    sort!(df_union, [:date, :hospital, :symptom])
     # junta tudo
     df_final = leftjoin(df_union, df_count, on=[:date, :hospital, :symptom])
     df_final.srag = coalesce.(df_final.srag, 0)
-    df_final |> CSV.write(joinpath(pwd(), "data", "srag_timeseries.csv"))
+    return df_final
+end
+
+function process_srag()
+    vcat(srag_year(2019), srag_year(2020), srag_year(2021)) |> CSV.write(joinpath(pwd(), "data", "srag_timeseries.csv"))
     return nothing
-# end
+end
+
+df_final |> CSV.write(joinpath(pwd(), "data", "srag_timeseries.csv"))
 
 # Twitter
 function process_twitter()

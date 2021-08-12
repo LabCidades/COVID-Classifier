@@ -114,7 +114,7 @@ Código | Descrição
 
 * Pesquisador Responsável: [Jose Storopoli](https://github.com/storopoli)
 * Pesquisador Associado: [Alessandra Pellini](https://github.com/acgpellini)
-* Pesquisador Assistente: [Andre Santos](https://github.com/andrelmfsantos)
+* Pesquisador Assistente: [André Santos](https://github.com/andrelmfsantos)
 * Alunos de Iniciação Científica:
   * [João Vinícius Vieira Nóia](https://github.com/vinivieiran)
   * [Elias Noda](https://github.com/Elias-Noda)
