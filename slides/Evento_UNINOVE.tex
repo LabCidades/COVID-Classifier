@@ -266,11 +266,11 @@
             \begin{vfilleditems}
                 \item input pobres de dados
                 \item suposições incorretas de modelagem
-                \item alta sensibilidade de estimativas
+                \item alta instabilidade de estimativas
                 \item falta de incorporação de características epidemiológicas
                 \item falta de transparência
                 \item consideração de apenas uma ou algumas dimensões do problema em questão
-                \item falta de \textit{expertise},
+                \item falta de \textit{expertise}
                 \item \textit{groupthink} e efeitos \textit{bandwagon}
                 \item \textit{selective reporting}
             \end{vfilleditems}
@@ -372,7 +372,7 @@
                 \item variação da quantidade por unidade de tempo $dt$
                 \item taxa constante de contágio $\beta$
                 \item taxa de mortalidade constante de indivíduos infectados $\omega$
-                \item tempo médio em dias em que os indivíduos estão infectantes $dI$ e em estado terminal $dT$
+                \item tempo médio que os indivíduos estão infectantes $dI$ e em estado terminal $dT$
             \end{vfilleditems}
         \end{column}
         \begin{column}{0.5\textwidth}
@@ -404,9 +404,9 @@
     \begin{align*}
         \textcolor{blue}{\text{Taxa de Tweets}} &\sim \text{Exponencial}(1) \\
         \textcolor{blue}{\phi_{\text{tweets}}} &\sim \text{Exponencial}(\lambda_{\phi_{\text{tweets}}}) \\
-        \textcolor{red}{\text{Tweets}} &\sim \text{Binomial Negativa}\left(\text{compartimento $I$} \cdot \text{Prop. Tweets}, \frac{1}{\phi_{\text{tweets}}}\right)
+        \textcolor{red}{\text{Tweets}} &\sim \text{Binomial Negativa}\left(\text{compartimento $I$} \cdot \text{Taxa de Tweets}, \frac{1}{\phi_{\text{tweets}}}\right)
     \end{align*}
-    Podemos também partir do pressuposto que uma pessoa tuíta apenas uma vez por dia seu sintoma e colocar uma \textit{priori} em Prop. Tweets como uma $\text{Beta}(1, 1)$
+    Podemos também partir do pressuposto que uma pessoa tuíta apenas uma vez por dia seu sintoma e colocar uma \textit{priori} em Taxa de Tweets como uma $\text{Beta}(1, 1)$ e tornar isso uma proporção
 \end{frame}
 
 \section{Classificador de Tweets com Aprendizagem de Máquina}
@@ -415,7 +415,7 @@
     \vfill
     Para medir o desempenho de um algoritmo de aprendizagem de máquina é preciso de uma medida de desempenho:
     \begin{vfilleditems}
-        \item Precisão: $\frac{\text{Verdadeiro Positivos}}{\text{Verdadeiro Positivos} + \text{Falso Positivos}}$
+        \item Valor Preditivo Positivo\footnote{conhecido também como precisão em aprendizagem de máquina}: $\frac{\text{Verdadeiro Positivos}}{\text{Verdadeiro Positivos} + \text{Falso Positivos}}$
         \item Sensibilidade: $\frac{\text{Verdadeiro Positivos}}{\text{Verdadeiro Positivos} + \text{Falso Negativos}}$
         \item Score F1\footnote{média harmônica de precisão e sensibilidade}: $2 \cdot \frac{\text{Precisão} \cdot \text{Sensibilidade}}{\text{Precisão} + \text{Sensibilidade}}$
     \end{vfilleditems}
@@ -575,7 +575,7 @@
     \begin{vfilleditems}
         \item incorporar sintomas do Twitter
         \item taxa de contágio variável $\boldsymbol{\beta}$
-        \item tempo médio em dias em que os indivíduos estão em estado terminal variável $\boldsymbol{dT}$
+        \item tempo médio que os indivíduos estão em estado terminal variável $\boldsymbol{dT}$
         \item inserção de vacinação (ver seção 4.3 de \textcite{gleesonCalibratingCOVID19SEIR2021})
         \item hierarquização do modelo para estados/regiões do Brasil
     \end{vfilleditems}
