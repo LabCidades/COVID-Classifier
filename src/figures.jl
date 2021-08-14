@@ -14,7 +14,10 @@ end
 
 # necessário AlgebraOfGraphics versão 0.5.1
 # Sintomas SRAG vs Twitter
-function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets, df_srag=srag, vaccination=true, span=0.75, degree=2)
+function srag_vs_twitter(symptom::Symbol, hospital::String;
+                         df_tweets=tweets, df_srag=srag,
+                         vaccination=true, normalize=true,
+                         span=0.75, degree=2)
     symptoms_dict = Dict(
         "s01" => "adinamia",
         "s02" => "ageusia",
@@ -88,6 +91,11 @@ function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets, df
     # passa uma função de formatação e uma lista de ticks e datas (AoG v 0.5.1)
     dateticks = AlgebraOfGraphics.datetimeticks(x -> Dates.format(x, dateformat"mm-yy"), months)
     transform!(symptom_df, :date_rata => x -> range_scaler(x; a=min(dateticks[1]...), b=max(dateticks[1]...)); renamecols=false)
+    if normalize
+        df_temp_srag = transform(filter(row -> row.variable == "srag", symptom_df), :value => minmax_scaler; renamecols=false)
+        df_temp_tweets = transform(filter(row -> row.variable == "n", symptom_df), :value => minmax_scaler; renamecols=false)
+        symptom_df = vcat(df_temp_srag, df_temp_tweets)
+    end
     # Vacinação inicío em 17/01/2021
     janeiro = findfirst(x -> x == "01-21", dateticks[2])
     fevereiro = findfirst(x -> x == "02-21", dateticks[2])
@@ -100,15 +108,25 @@ function srag_vs_twitter(symptom::Symbol, hospital::String; df_tweets=tweets, df
                     :value => "",
                     color=:variable => renamer("srag" => hospital_dict[hospital], "n" => "Tweets com Sintoma") => "Cor")
     plt *= smooth(span=span, degree=degree)
-    ag = draw!(f, plt;
-               axis=(;
+    if normalize
+        axis = (;
                title = "$(hospital_dict[hospital]) - $(titlecase(symptoms_dict[string(symptom)])) - ($(string(symptom)))",
                titlesize=20,
                xticklabelrotation=π/4,
                xlabelpadding=4.0,
                xticks=dateticks,
-               ytickformat=(x -> string.(x ./ 1_000) .* "K")
-           ))
+               yticks=0.0:0.2:1.0)
+    else
+        axis = (;
+               title = "$(hospital_dict[hospital]) - $(titlecase(symptoms_dict[string(symptom)])) - ($(string(symptom)))",
+               titlesize=20,
+               xticklabelrotation=π/4,
+               xlabelpadding=4.0,
+               xticks=dateticks,
+               ytickformat=(x -> string.(x ./ 1_000) .* "K"))
+    end
+    ag = draw!(f, plt;
+               axis=axis)
     if vaccination
         vlines!(f.content[1], mid_jan_fev; color=:red ,linewidth=2) # vacinação
     end

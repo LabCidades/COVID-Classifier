@@ -2,7 +2,7 @@
 
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
 
-Este projeto é um projeto de pesquisa do [LabCidades](https://github.com/LabCidades/) da [Universidade Nove de Julho -- UNINOVE](https://uninove.br).
+Este projeto é um projeto de pesquisa do [LabCidades](https://github.com/LabCidades/) da [Universidade Nove de Julho - UNINOVE](https://uninove.br).
 
 ## Dados
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5073680.svg)](https://doi.org/10.5281/zenodo.5073680)

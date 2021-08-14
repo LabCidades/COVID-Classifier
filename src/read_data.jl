@@ -70,10 +70,7 @@ tweets = CSV.read(joinpath(pwd(), "data", "twitter_timeseries.csv"), DataFrame)
 transform!(tweets, :symptom => ByRow(x -> symptom_map(x, symptoms_dict)) => :symptom_detail)
 
 # SRAG temos todos symptoms
-srag = CSV.read(joinpath(pwd(), "data", "SRAG_time_series.csv"), DataFrame)
-sort!(srag, [:date, :symptom])
-select!(srag, Not(:tweet))
-transform!(srag, :srag => ByRow(Int); renamecols=false)
+srag = CSV.read(joinpath(pwd(), "data", "srag_timeseries.csv"), DataFrame)
 transform!(srag, :symptom => ByRow(x -> symptom_map(x, symptoms_dict)) => :symptom_detail)
 
 # Outros períodos
