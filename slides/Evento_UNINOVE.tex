@@ -191,14 +191,22 @@
 \end{frame}
 
 \begin{frame}[plain, noframenumbering]{Licença}
-    \centering
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            O texto e as figuras desses slides possuem uma
+            \href{https://creativecommons.org/licenses/by-nc-sa/4.0/deed.pt}{Licença
+            Creative Commons
+            Atribuição-NãoComercial-CompartilhaIgual 4.0 Internacional (CC BY-NC-SA 4.0)}
+            \vfill
+            \centering
+            \includegraphics[width=0.6\columnwidth]{CC_NC_SA.png}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \centering
+            \includegraphics[width=0.8\columnwidth]{QR_Code.png}
+        \end{column}
+    \end{columns}
     \vfill
-    \Large O texto e as figuras desses slides possuem uma
-    \href{https://creativecommons.org/licenses/by-nc-sa/4.0/deed.pt}{Licença
-    Creative Commons
-    Atribuição-NãoComercial-CompartilhaIgual 4.0 Internacional (CC BY-NC-SA 4.0)}
-    \vfill
-    \includegraphics[width = 0.2\textwidth]{CC_NC_SA.png}
 \end{frame}
 
 \section{LabCidades UNINOVE}
@@ -395,7 +403,7 @@
         \textcolor{blue}{d_I} &\sim \text{Normal}^+(\mu_{d_I}, \sigma_{d_I}) \\
         \textcolor{blue}{d_T} &\sim \text{Normal}^+(\mu_{d_T}, \sigma_{d_T}) \\
         \textcolor{blue}{\phi} &\sim \text{Exponencial}(\lambda_\phi) \\
-        \textcolor{red}{\text{Mortos}} &\sim \text{Binomial Negativa}\left(\text{compartimento $D$}, \frac{1}{\phi}\right)
+        \textcolor{red}{\text{Mortos}} &\sim \text{Binomial Negativa}\left(\text{compart. $D$}, \frac{1}{\phi}\right)
     \end{align*}
 \end{frame}
 
@@ -404,7 +412,7 @@
     \begin{align*}
         \textcolor{blue}{\text{Taxa de Tweets}} &\sim \text{Exponencial}(1) \\
         \textcolor{blue}{\phi_{\text{tweets}}} &\sim \text{Exponencial}(\lambda_{\phi_{\text{tweets}}}) \\
-        \textcolor{red}{\text{Tweets}} &\sim \text{Binomial Negativa}\left(\text{compartimento $I$} \cdot \text{Taxa de Tweets}, \frac{1}{\phi_{\text{tweets}}}\right)
+        \textcolor{red}{\text{Tweets}} &\sim \text{Binomial Negativa}\left(\text{compart. $I$} \cdot \text{Taxa de Tweets}, \frac{1}{\phi_{\text{tweets}}}\right)
     \end{align*}
     Podemos também partir do pressuposto que uma pessoa tuíta apenas uma vez por dia seu sintoma e colocar uma \textit{priori} em Taxa de Tweets como uma $\text{Beta}(1, 1)$ e tornar isso uma proporção
 \end{frame}
