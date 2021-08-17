@@ -106,7 +106,7 @@ function srag_vs_twitter(symptom::Symbol, hospital::String;
     plt = data(symptom_df) *
             mapping(:date_rata=>"Data",
                     :value => "",
-                    color=:variable => renamer("srag" => hospital_dict[hospital], "n" => "Tweets com Sintoma") => "Cor")
+                    color=:variable => renamer("srag" => hospital_dict[hospital], "n" => "Tweets com Sintoma") => "")
     plt *= smooth(span=span, degree=degree)
     if normalize
         axis = (;
@@ -130,7 +130,7 @@ function srag_vs_twitter(symptom::Symbol, hospital::String;
     if vaccination
         vlines!(f.content[1], mid_jan_fev; color=:red ,linewidth=2) # vacinação
     end
-    legend!(f[end+1, 1], ag; orientation=:horizontal, tellheight=true, tellwidth=false)
+    legend!(f[end+1, 1], ag; titleposition = :left, orientation=:horizontal, tellheight=true, tellwidth=false)
     return f
 end
 
