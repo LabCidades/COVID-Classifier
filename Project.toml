@@ -1,9 +1,11 @@
 [deps]
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+EvoTrees = "f6006082-12f8-11e9-0c9c-0d5d367ab1e5"
 Languages = "8ef0a80b-9436-5d2c-a485-80b904378c43"
 MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
 PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"

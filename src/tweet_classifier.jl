@@ -4,7 +4,8 @@ using DataFrames
 using Languages
 using MLJ
 using TextAnalysis
-using MLJ: fit!
+using CUDA: has_cuda_gpu
+using MLJ: fit!, predict
 using Unicode: normalize
 
 const regex_twitter = r"(@[A-Za-z0-9]+)"
@@ -28,6 +29,8 @@ DataFrames.transform!(df, [:Column1, :hashtags, :urls, :photos, :reply_to, :symp
 # Remove twitter handles
 DataFrames.transform!(df, :tweet => ByRow(x -> replace(x, regex_twitter => "")); renamecols=false)
 # Remove Unicode Stuff for StringDocument
+# this is a nasty bug
+# see https://github.com/JuliaText/TextAnalysis.jl/issues/255
 DataFrames.transform!(df, :tweet => ByRow(x -> remove_corrupt_utf8(normalize(x, casefold=true, stripcc=true, stripmark=true, stable=true, compat=true))); renamecols=false)
 
 # label
@@ -52,3 +55,26 @@ X = tf_idf(m)
 y = df[:, :label]
 
 # Create a MLJ Model using EvoTree
+EvoTree = @load EvoTreeClassifier
+if has_cuda_gpu()
+    evotree = EvoTree(device="gpu")
+else
+    evotree = EvoTree(device="cpu")
+end
+
+# if necessary coerce X from Int to Continuous (scitype)
+X = coerce(X, Continuous)
+
+# also coerce y to multiclass if necessary
+y = coerce(y, Multiclass)
+
+mach = machine(evotree, X, y)
+
+
+evaluate!(mach;
+	resampling=CV(
+		nfolds=6,     # default is 6
+		shuffle=true  # default is nothing
+		),
+    measure=[Accuracy(), Precision(), Recall(), FScore()]
+	)
