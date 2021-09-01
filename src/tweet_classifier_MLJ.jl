@@ -10,6 +10,8 @@ using Unicode: normalize
 
 const regex_twitter = r"(@[A-Za-z0-9]+)"
 
+MLJ.default_resource(CPUThreads())
+
 # Load Data
 file = joinpath(pwd(), "annotated_tweets", "2021_08_31_8k.csv")
 df = CSV.File(
@@ -68,13 +70,33 @@ X = coerce(X, Continuous)
 # also coerce y to multiclass if necessary
 y = coerce(y, Multiclass)
 
-mach = machine(evotree, X, y)
+# Cross-Validation
+# mach = machine(evotree, X, y)
+# evaluate!(mach;
+# 	resampling=CV(
+# 		nfolds=6,     # default is 6
+# 		shuffle=true  # default is nothing
+# 		),
+#     measure=[Accuracy(), Precision(), Recall(), FScore()]
+# 	)
 
+# Hyperparameter Tuning
+latin = LatinHypercube(gens=10, popsize=120)
+r_nrounds = range(evotree, :nrounds, lower=10, upper=100, scale=:log)
+r_max_depth = range(evotree, :max_depth, lower=10, upper=15)
+r_λ = range(evotree, :λ, lower=0.1, upper=0.5) # L2 regularization
+r_α = range(evotree, :α, lower=0.0, upper = 1.0, scale=:linear) # L1 regularization
+r_η = range(evotree, :η, lower=0.1, upper=0.5) # learning rate
 
-evaluate!(mach;
-	resampling=CV(
-		nfolds=6,     # default is 6
-		shuffle=true  # default is nothing
-		),
-    measure=[Accuracy(), Precision(), Recall(), FScore()]
-	)
+tuned_tree = TunedModel(
+    model=evotree,
+    tuning=RandomSearch(),
+    resampling=CV(nfolds=6, rng=1234),
+    range=[r_nrounds, r_max_depth],
+    measures=BrierLoss(), # probabilistic
+    acceleration=CPUThreads(),
+    acceleration_resampling=CPUThreads()
+)
+
+mach = machine(tuned_tree, X, y)
+fit!(mach)
