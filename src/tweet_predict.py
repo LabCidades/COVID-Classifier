@@ -1,16 +1,18 @@
 import argparse
-import time
 import datetime
-import numpy as np
-import torch
-import pandas as pd
 import os
-from transformers import AutoModel, AutoModelForPreTraining, AutoTokenizer, pipeline
-from transformers import BertForSequenceClassification, AdamW, BertConfig
-from transformers import get_linear_schedule_with_warmup
+import time
+
+import numpy as np
+import pandas as pd
+import torch
 from torch.utils.data import TensorDataset, random_split
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
-from tweet_classifier_BERT import get_model, format_time
+from transformers import AutoModel, AutoModelForPreTraining, AutoTokenizer, pipeline
+from transformers import AdamW, BertConfig, BertForSequenceClassification
+from transformers import get_linear_schedule_with_warmup
+
+from tweet_classifier_BERT import format_time, get_model
 
 # If there's a GPU available...
 if torch.cuda.is_available():

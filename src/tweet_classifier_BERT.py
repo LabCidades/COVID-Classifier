@@ -1,16 +1,17 @@
 import argparse
+import datetime
+import os
 import random
 import time
-import datetime
+
 import numpy as np
-import torch
 import pandas as pd
-import os
-from transformers import AutoModel, AutoModelForPreTraining, AutoTokenizer, pipeline
-from transformers import BertForSequenceClassification, AdamW, BertConfig
-from transformers import get_linear_schedule_with_warmup
+import torch
 from torch.utils.data import TensorDataset, random_split
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
+from transformers import AutoModel, AutoModelForPreTraining, AutoTokenizer, pipeline
+from transformers import AdamW, BertConfig, BertForSequenceClassification
+from transformers import get_linear_schedule_with_warmup
 
 # Taken from: https://mccormickml.com/2019/07/22/BERT-fine-tuning/
 
