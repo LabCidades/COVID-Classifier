@@ -16,28 +16,100 @@ As bases SRAG do SUS podem ser acessadas em:
 
 ## Reprodução do Ambiente de Desenvolvimento
 
-As funções `download_twitter` e `download_srag` no arquivo `src/get_data.jl` fazem o download automático dos dados; e as funções `process_twitter` e `process_srag` no arquivo `src/process_data.jl` fazem todo o processamento e manipulação de dados necessária para a reprodução das análises e código desse repositório.
+1. Clone o repositório e acesse o diretório raiz
 
-Para reproduzir o ambiente de desenvolvimento:
-
-1. [Instale Julia](https://julialang.org/downloads/)
-
-2. Clone o repositório e acesse o diretório raiz:
    ```bash
    git clone https://github.com/LabCidades/COVID-Classifier.git
    cd COVID-Classifier
    ```
+### Preparação dos Dados (Julia)
 
-3. Instancie o ambiente julia abrindo uma nova sessão de julia e digitando:
+As funções `download_twitter` e `download_srag` no arquivo `src/get_data.jl` fazem o download automático dos dados; e as funções `process_twitter` e `process_srag` no arquivo `src/process_data.jl` fazem todo o processamento e manipulação de dados necessária para a reprodução das análises e código desse repositório.
+
+Para reproduzir o ambiente de preparação dos dados:
+
+1. [Instale Julia](https://julialang.org/downloads/)
+
+2. Instancie o ambiente julia abrindo uma nova sessão de julia e digitando:
+
    ```julia
    using Pkg
 
    Pkg.activate(".")
    Pkg.instantiate()
    ```
-4. Em um terminal digite:
+
+3. Em um terminal digite:
    1. `julia --project get_data.jl` para fazer o download dos arquivos de dados do SUS e do Zenodo (OBS: isto baixará cerca de 2.6GB de dados)
    2. `julia --project process_data.jl` para processar os arquivos de dados
+
+### Classificador dos Tweets (PyTorch - Python)
+
+Para reproduzir o ambiente de preparação dos dados:
+
+1. [Instale Python](https://python.org) (recomendamos o [miniforge](https://github.com/conda-forge/miniforge) que é o anaconda opensource)
+
+2. Instancie o ambiente Python digitando no terminal com o `conda` instalado:
+
+   ```bash
+    conda create -f environment.yml
+   ```
+
+3. O script `tweet_classifier_BERT.py` treina um classificador de tweets em sinal (1) ou ruído (0) para a presença de sintomas usando um modelo transformer BERT pré-treinado em português [BERTimbau](https://huggingface.co/neuralmind/bert-base-portuguese-cased):
+
+   ```bash
+   $ python src/tweet_classifier_BERT.py -h
+
+   There are 1 GPU(s) available.
+   We will use the GPU: GeForce RTX 3070 Ti
+   usage: tweet_classifier_BERT.py [-h] [-f FILE]  [-lr LEARNING_RATE] [-e EPOCH] [-b BATCHSIZE]
+
+   Este script treina um classificador de tweets em sinal (1) ou ruído (0) para a presença de sintomas usando um modelo transformer BERT pré-treinado em português BERTimbau
+
+   optional arguments:
+     -h, --help            show this help message and exit
+     -f FILE, --file FILE  arquivo de treino com tweets rotulados
+     -lr LEARNING_RATE, --learning-rate LEARNING_RATE
+                           taxa de aprendizagem, do paper do BERT você pode escolher dentre 5e-5, 3e-5 ou 2e-5
+     -e EPOCH, --epoch EPOCH
+                           épocas, do paper do BERT você pode escolher entre 2 a 4
+     -b BATCHSIZE, --batchsize BATCHSIZE
+                        tamanho do batch, ideal ser uma potência de 2, escolha com cuidado para não estourar a memória da GPU
+
+   ```
+
+   Os modelos pré-treinados do huggingface serão salvos no diretório `huggingface_cache/`
+
+   Os pesos do treino serão salvos no diretório `model_weights/` com a seguinte assinatura de arquivo `{file}-lr_{learning_rate}-e_{epoch}-batch{batchsize}.pt`
+
+   Os resultados do treino serão salvos no diretório `results/` com a seguinte assinatura de arquivo `{file}-lr_{learning_rate}-e_{epoch}-batch{batchsize}.csv`
+
+4. O script `tweet_predict.py` usa o modelo treinado na etapa anterior e classifica os tweets em sinal (1) ou ruído (0) para a presença de sintomas:
+
+   ```bash
+   python src/tweet_predict.py -h
+   There are 1 GPU(s) available.
+   We will use the GPU: GeForce RTX 3070 Ti
+   usage: tweet_predict.py [-h] [-f FILE] [-lr LEARNING_RATE] [-e EPOCH] [-b BATCHSIZE]
+
+   Este script usa o modelo treinado na etapa anterior e classifica os tweets em sinal (1) ou ruído (0) para a presença de sintomas
+
+   optional arguments:
+     -h, --help            show this help message and exit
+     -f FILE, --file FILE  arquivo de treino com tweets rotulados
+     -lr LEARNING_RATE, --learning-rate LEARNING_RATE
+                           taxa de aprendizagem do modelo que você deseja usar
+     -e EPOCH, --epoch EPOCH
+                           épocas do modelo que você deseja usar
+     -b BATCHSIZE, --batchsize BATCHSIZE
+                           tamanho do batch do modelo que você deseja usar
+   ```
+
+   Assim como na etapa anterior, os modelos pré-treinados do huggingface serão carregados do diretório `huggingface_cache/`
+
+   Os pesos do treino serão carregados do diretório `model_weights/` com a seguinte assinatura de arquivo `{file}-lr_{learning_rate}-e_{epoch}-batch{batchsize}.pt`
+
+   As predições serão salvas no diretório `predictions/` com a seguinte assinatura de arquivo `twitter_pred_{year}.csv` com três colunas: `id`, `tweet` e `label`.
 
 ## Código dos Sintomas
 

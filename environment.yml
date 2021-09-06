@@ -1,0 +1,14 @@
+name: pytorch
+channels:
+  - conda-forge
+  - pytorch
+  - huggingface
+dependencies:
+  - torchaudio
+  - torchvision
+  - cudatoolkit=11.1
+  - transformers
+  - ipykernel
+  - autopep8
+  - pandas
+  - matplotlib
