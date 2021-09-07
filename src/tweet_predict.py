@@ -29,9 +29,10 @@ else:
 def get_data(year):
     df = pd.read_csv(os.path.join(os.getcwd(),
                                   'data', f"twitter_raw_{year}.csv"),
-                     usecols=['id', 'tweet'],
+                     usecols=['id', 'date', 'tweet'],
                      dtype={
         'id': 'str',
+        'date': 'datetime', 
         'tweet': 'str',
     })
     regex_twitter = r'(@[A-Za-z0-9]+)'
@@ -136,12 +137,15 @@ def get_predictions(df, model, batch_size):
         # Move logits to CPU
         logits = logits.detach().cpu().numpy()
         # Store predictions and true labels
-        predictions.append(logits)
+        predict = np.argmax(logits, axis=1)
+        predictions.append(predict)
 
     # Measure how long this prediction took.
     prediction_time = format_time(time.time() - t0)
     print("")
     print("  Prediction took: {:}".format(prediction_time))
+    # Flatten the list
+    predictions = [val for sublist in predictions for val in sublist]
     return predictions
 
 
@@ -172,18 +176,12 @@ if __name__ == '__main__':
     model.to(device)
 
     # Run Stuff
-    # for year in [2019, 2020, 2021]:
+    for year in [2019, 2020, 2021]:
+        df = get_data(year)
+        df['label'] = get_predictions(df, model, batch_size=args.batchsize)
+        df.to_csv(os.path.join(os.getcwd(), 'predictions',
+                  f"{args.file}-twitter_pred_{year}.csv"))
 
-    #     df = get_data(year)
-    #     input_ids, attention_masks, labels = tokenization(df, max_length=250)
-    #     train_dataloader, test_dataloader = train_test_split(
-    #         input_ids=input_ids, attention_masks=attention_masks, labels=labels, batch_size=args.batchsize)
-    year = 2019
-    df = get_data(year)
-    df['label'] = get_predictions(df, model, batch_size=args.batchsize)
-    df.to_csv(os.path.join(os.getcwd(), 'predictions',
-              f"{args.file}-twitter_pred_{year}".csv))
-
-    # Clean cache for next pass
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
+        # Clean cache for next pass
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()

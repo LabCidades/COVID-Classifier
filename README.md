@@ -52,7 +52,7 @@ Para reproduzir o ambiente de preparação dos dados:
 2. Instancie o ambiente Python digitando no terminal com o `conda` instalado:
 
    ```bash
-    conda create -f environment.yml
+    conda env create -f environment.yml
    ```
 
 3. O script `tweet_classifier_BERT.py` treina um classificador de tweets em sinal (1) ou ruído (0) para a presença de sintomas usando um modelo transformer BERT pré-treinado em português [BERTimbau](https://huggingface.co/neuralmind/bert-base-portuguese-cased):
@@ -109,7 +109,7 @@ Para reproduzir o ambiente de preparação dos dados:
 
    Os pesos do treino serão carregados do diretório `model_weights/` com a seguinte assinatura de arquivo `{file}-lr_{learning_rate}-e_{epoch}-batch{batchsize}.pt`
 
-   As predições serão salvas no diretório `predictions/` com a seguinte assinatura de arquivo `twitter_pred_{year}.csv` com três colunas: `id`, `tweet` e `label`.
+   As predições serão salvas no diretório `predictions/` com a seguinte assinatura de arquivo `twitter_pred_{year}.csv` com quatro colunas: `id`, `date`, `tweet` e `label`.
 
 ## Código dos Sintomas
 
