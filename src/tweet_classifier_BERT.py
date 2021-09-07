@@ -34,10 +34,10 @@ def get_data(file):
                      usecols=['id', 'tweet', 'label'],
                      na_values=['', '???'],
                      dtype={
-        'id': 'str',
-        'tweet': 'str',
-        'label': 'str'
-    })
+                            'id': 'str',
+                            'tweet': 'str',
+                            'label': 'str'
+                           })
     df.dropna(inplace=True)
     df['label'] = df['label'].astype(int)
 

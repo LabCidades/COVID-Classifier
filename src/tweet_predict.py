@@ -31,10 +31,10 @@ def get_data(year):
                                   'data', f"twitter_raw_{year}.csv"),
                      usecols=['id', 'date', 'tweet'],
                      dtype={
-        'id': 'str',
-        'date': 'datetime', 
-        'tweet': 'str',
-    })
+                            'id': 'str',
+                            'tweet': 'str',
+                     },
+                     parse_dates=['date'])
     regex_twitter = r'(@[A-Za-z0-9]+)'
     df['tweet'] = df['tweet'].str.replace(regex_twitter, '', regex=True)
     return df
