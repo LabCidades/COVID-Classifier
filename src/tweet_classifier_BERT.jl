@@ -127,11 +127,13 @@ function train!(epoch, train_loader, test_loader)
         al::Float64 = 0.0
         for batch in train_loader
             data, label, mask = todevice(preprocess(batch[1], batch[2]))
-            l, p = loss(data, label, train_loader.batchsize; mask=mask)
+            (l, p), back = Flux.pullback(ps) do
+                loss(data, label, train_loader.batchsize; mask=mask)
+            end
             #@show l
             a = acc(p, label)
             al += a
-            grad = gradient(() -> l, ps)
+            grad = back((Flux.Zygote.sensitivity(l), nothing))
             i += 1
             update!(opt, ps, grad)
             #@show al / i
