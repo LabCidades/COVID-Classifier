@@ -40,7 +40,7 @@ df = DataFrame(
             "retweet_id",
             "retweet_date",
         ],
-        missingstrings=["", "???"],
+        missingstring=["", "???"],
     ),
 )
 
