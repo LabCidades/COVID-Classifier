@@ -124,7 +124,7 @@ function train!(epoch, train_loader, test_loader)
     for e in 1:epoch
         @info "epoch: $e"
         i = 1
-        al::Float64 = 0.0
+        al::Float32 = 0.0
         for batch in train_loader
             data, label, mask = todevice(preprocess(batch[1], batch[2]))
             (l, p), back = Flux.pullback(ps) do
@@ -146,7 +146,7 @@ end
 function test(test_loader)
     Flux.testmode!(bert_model)
     i = 1
-    al::Float64 = 0.0
+    al::Float32 = 0.0
     for batch in test_loader
         data, label, mask = todevice(preprocess(batch[1], batch[2]))
         l, p = loss(data, label, test_loader.batchsize; mask=mask)
