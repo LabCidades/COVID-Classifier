@@ -458,3 +458,6 @@ TSWLatexianTemp*
 
 # Hugging Face Cache
 huggingface_cache/
+
+# Pyright
+pyrightconfig.json
