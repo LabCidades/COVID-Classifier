@@ -1,3 +1,4 @@
+#using ArgParse
 using CSV
 using CUDA
 using CategoricalArrays
@@ -7,7 +8,6 @@ using Transformers
 using Transformers.Basic
 using Transformers.Pretrain
 using Transformers.BidirectionalEncoder
-#using Transformers.HuggingFace
 using WordTokenizers
 using Flux.Data: DataLoader
 using Flux: gradient
@@ -67,18 +67,29 @@ function partitionTrainTest(data; at=0.9)
 end
 train_df, test_df = partitionTrainTest(df; at=0.9)
 
-# # Train/Test DataLoader
+# Train/Test DataLoader
+# For fine-tuning BERT on a specific task, the authors recommend a batch size of 16 or 32.
+# My GPU only tolerates 8. 16 or 32 it blows up!
 train_loader = DataLoader(
-    (train_df[:, :tweet], train_df[:, :label]); batchsize=32, shuffle=true
-)
+    (train_df[:, :tweet], train_df[:, :label]); batchsize=8, shuffle=true
+)function main()
+    parsed_args = parse_commandline()
+    println("Parsed args:")
+    for (arg,val) in parsed_args
+        println("  $arg  =>  $val")
+    end
+end
+
+main()
 test_loader = DataLoader(
-    (test_df[:, :tweet], test_df[:, :label]); batchsize=32, shuffle=true
+    (test_df[:, :tweet], test_df[:, :label]); batchsize=8, shuffle=true
 )
 
 # Load Bert
-# Doesn't work on BERT-imbau :(
-# _bert_model, wordpiece, tokenizer = hgf"neuralmind/bert-large-portuguese-cased:model"
 # This will download a huge file in your /home/storopoli/.julia/datadeps
+# run in terminal chmod 777 .julia/packages/Transformers/V363g/src/huggingface Artifacts.toml
+# Doesn't work on BERTimbau :(
+# _bert_model, wordpiece, tokenizer = hgf"neuralmind/bert-large-portuguese-cased:model"
 _bert_model, wordpiece, tokenizer = pretrain"Bert-multilingual_L-12_H-768_A-12"
 const vocab = Vocabulary(wordpiece)
 const hidden_size = size(_bert_model.classifier.pooler.W, 1)
@@ -102,6 +113,7 @@ function loss(data, label, batchsize; mask=nothing)
     return l, p
 end
 
+# Mask
 markline(sent) = ["[CLS]"; sent; "[SEP]"]
 
 # Preprocess Data
@@ -119,8 +131,8 @@ function acc(p, label)
 end
 
 # Train
-function train!(epoch, train_loader, test_loader)
-    @info "start training"
+function train!(epoch, train_loader)
+    @info "Start training"
     for e in 1:epoch
         @info "epoch: $e"
         i = 1
@@ -130,16 +142,24 @@ function train!(epoch, train_loader, test_loader)
             (l, p), back = Flux.pullback(ps) do
                 loss(data, label, train_loader.batchsize; mask=mask)
             end
-            #@show l
+            #@info "Epoch: $e\tBatch: $i\tLoss: $l"
             a = acc(p, label)
+            #@info "Epoch: $e\tBatch: $i\tAccuracy: $a"
             al += a
             grad = back((Flux.Zygote.sensitivity(l), nothing))
             i += 1
             update!(opt, ps, grad)
-            #@show al / i
+            #@info "Epoch: $e\tBatch: $i\tAccuracy: $(al / i)"
+            # reclaim memory
+            data = label = mask = nothing
+            GC.gc(true)
         end
-        test()
+        # reclaim memory
+        GC.gc(true)
+        test(test_loader)
     end
+    # reclaim memory
+    GC.gc(true)
 end
 
 # Test
@@ -149,20 +169,63 @@ function test(test_loader)
     al::Float32 = 0.0
     for batch in test_loader
         data, label, mask = todevice(preprocess(batch[1], batch[2]))
-        l, p = loss(data, label, test_loader.batchsize; mask=mask)
-        #@show l
+        _, p = loss(data, label, test_loader.batchsize; mask=mask)
+        #@show l # the _ above
         a = acc(p, label)
         al += a
         i += 1
+        # reclaim memory
+        data = label = mask = nothing
+        GC.gc(true)
     end
     al /= i
     Flux.testmode!(bert_model, false)
-    @show al
+    # reclaim memory
+    GC.gc(true)
+    @info "Test Accuracy: $al"
 end
 
-train!(2, train_loader, test_loader)
-
+train!(2, train_loader)
 weights = params(bert_model);
-
 @save joinpath(pwd(), "model_weights", "bert_model_ADAM_3.5e-5.bson") weights
 
+
+# ArgParse (not implemented yet)
+# function parse_commandline()
+#     s = ArgParseSettings()
+#     @add_arg_table! s begin
+#         "--gpu", "-g"
+#             help = "use gpu"
+#             arg_type = Bool
+#             action = :store_true
+#         "--batchsize", "-b"
+#             help = "batchsize"
+#             arg_type = Int
+#             default = 32
+#             action = :store_true
+#         "--epoch", "-e"
+#             help = "epoch, choose between 2 to 4"
+#             arg_type = Int
+#             default = 3
+#             action = :store_true
+#         "--learning-rate", "-lr"
+#             help = "learning rate, choose between 5e-5, 3e-5 or 2e-5"
+#             arg_type = Float64
+#             default = 5e-5
+#             action = :store_true
+#     end
+#     return parse_args(s)
+# end
+
+# function main()
+#     parsed_args = parse_commandline()
+#     println("Parsed args:")
+#     for (arg,val) in parsed_args
+#         println("  $arg  =>  $val")
+#     end
+#     train!(2, train_loader)
+#     weights = params(bert_model);
+#     @save joinpath(pwd(), "model_weights", "bert_model_ADAM_3.5e-5.bson") weights
+# end
+
+# main()
