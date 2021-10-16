@@ -396,6 +396,8 @@ def train_model(model, lr, epochs, train_dataloader, test_dataloader, seed_val=4
         # Tracking variables
         total_test_accuracy = 0
         total_test_loss = 0
+        total_test_true_positives = 0
+        total_test_true_negatives = 0
         total_test_false_positives = 0
         total_test_false_negatives = 0
 
@@ -442,6 +444,8 @@ def train_model(model, lr, epochs, train_dataloader, test_dataloader, seed_val=4
             # Calculate the accuracy for this batch of test sentences, and
             # accumulate it over all batches.
             total_test_accuracy += flat_accuracy(logits, label_ids)
+            total_test_true_positives += confusion_matrix[0] / batch_size
+            total_test_true_negatives += confusion_matrix[2] / batch_size
             total_test_false_positives += confusion_matrix[1] / batch_size
             total_test_false_negatives += confusion_matrix[3] / batch_size
 
@@ -456,6 +460,20 @@ def train_model(model, lr, epochs, train_dataloader, test_dataloader, seed_val=4
         avg_test_false_negatives = total_test_false_negatives / \
             len(test_dataloader)
         print("  False Negatives: {0:.2f}".format(avg_test_false_negatives))
+        # True positives and true negatives
+        avg_test_true_positives = total_test_true_positives / \
+            len(test_dataloader)
+        avg_test_true_negatives = total_test_true_negatives / \
+            len(test_dataloader)
+        # Report the final precision for this test run.
+        test_precision = avg_test_true_positives / (avg_test_true_positives + avg_test_false_positives)
+        print("  Precision: {0:.2f}".format(test_precision))
+        # Report the final recall for this test run.
+        test_recall = avg_test_true_positives / (avg_test_true_positives + avg_test_false_negatives)
+        print("  Recall: {0:.2f}".format(test_recall))
+        # Report the final F1-score for this test run.
+        test_f1 = 2 * (test_precision * test_recall / (test_precision + test_recall))
+        print("  F1: {0:.2f}".format(test_f1))
 
         # Calculate the average loss over all of the batches.
         avg_test_loss = total_test_loss / len(test_dataloader)
@@ -471,10 +489,13 @@ def train_model(model, lr, epochs, train_dataloader, test_dataloader, seed_val=4
             {
                 'epoch': epoch_i + 1,
                 'Training Loss': avg_train_loss,
-                'Test. Loss': avg_test_loss,
-                'Test. Accur.': avg_test_accuracy,
-                'Test. False Pos.': avg_test_false_positives,
-                'Test. False Neg.': avg_test_false_negatives,
+                'Test Loss': avg_test_loss,
+                'Test Accur.': avg_test_accuracy,
+                'Test False Pos.': avg_test_false_positives,
+                'Test False Neg.': avg_test_false_negatives,
+                'Test Precision': test_precision,
+                'Test Recall': test_recall,
+                'Test F1': test_f1,
                 'Training Time': training_time,
                 'Test Time': test_time
             }
@@ -484,7 +505,7 @@ def train_model(model, lr, epochs, train_dataloader, test_dataloader, seed_val=4
     print("Training complete!")
 
     print("Total training took {:} (h:mm:ss)".format(
-        format_time(time.time()-total_t0)))
+        format_time(time.time() - total_t0)))
 
     # Training Stats
     # Create a DataFrame from our training statistics.
