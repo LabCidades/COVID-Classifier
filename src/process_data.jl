@@ -153,7 +153,7 @@ function srag_year(year::Int64)
     elseif year == 2020
         df_dates = DataFrame(date=Date("2020-01-01"):Day(1):Date("2020-12-31"))
     elseif year == 2021
-        df_dates = DataFrame(date=Date("2021-01-01"):Day(1):Date("2021-06-30"))
+        df_dates = DataFrame(date=Date("2021-01-01"):Day(1):Date("2021-09-30"))
     end
     df_hospitals = DataFrame(hospital=["pri", "int", "ent", "sai", "evo"])
     df_symptoms = DataFrame(symptom=string.(keys(missing_symptoms_dict) ∪ last.(symptoms_srag)))
@@ -170,20 +170,18 @@ function process_srag()
     return nothing
 end
 
-df_final |> CSV.write(joinpath(pwd(), "data", "srag_timeseries.csv"))
-
 # Twitter
 function process_twitter()
     files_twitter = filter(endswith(r"twitter_raw_\d{4}.csv"), readdir(joinpath(pwd(), "data"); join=true))
-    tweets = mapreduce(x -> CSV.read(x, DataFrame), vcat, files_twitter)
-    select!(tweets, :id, :date, :tweet, :symptoms, :nsymptoms)
+    tweets = CSV.read(files_twitter, DataFrame; select=[:id, :date, :tweet, :symptoms, :nsymptoms])
+    dropmissing!(tweets)
     transform!(tweets,
             :date => ByRow(x -> Date(x, dateformat"Y-m-d H:M:S")),
             :symptoms => ByRow(x -> split(x, ", "));
             renamecols=false)
     tweets = flatten(tweets, :symptoms)
     # cria um dataframe para todas as datas e sintomas
-    df_dates = DataFrame(date=Date("2019-01-01"):Day(1):Date("2021-06-30"))
+    df_dates = DataFrame(date=Date("2019-01-01"):Day(1):Date("2021-09-30"))
     df_symptoms = DataFrame(symptom=unique(tweets.symptoms))
     df_union = crossjoin(df_dates, df_symptoms)
     # combine os tweets df por data e sintoma e conta linhas como n
@@ -194,3 +192,6 @@ function process_twitter()
     df_final |> CSV.write(joinpath(pwd(), "data", "twitter_timeseries.csv"))
     return nothing
 end
+
+process_srag()
+process_twitter()

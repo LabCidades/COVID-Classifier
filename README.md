@@ -5,9 +5,9 @@
 Este projeto é um projeto de pesquisa do [LabCidades](https://github.com/LabCidades/) da [Universidade Nove de Julho - UNINOVE](https://uninove.br).
 
 ## Dados
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5073680.svg)](https://doi.org/10.5281/zenodo.5073680)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5565381.svg)](https://doi.org/10.5281/zenodo.5565381)
 
-Os dados do twitter podem ser encontrados em [10.5281/zenodo.5073680](https://doi.org/10.5281/zenodo.5073680).
+Os dados do twitter podem ser encontrados em [10.5281/zenodo.5565381](https://doi.org/10.5281/zenodo.5565381).
 
 As bases SRAG do SUS podem ser acessadas em:
 * [SRAG 2019](https://opendatasus.saude.gov.br/dataset/bd-srag-2019)
