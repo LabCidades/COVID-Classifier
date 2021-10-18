@@ -369,13 +369,13 @@ def train_model(model, lr, epochs, train_dataloader, test_dataloader, seed_val=4
             scheduler.step()
 
         # Calculate the average loss over all of the batches.
-        avg_train_loss = total_train_loss / len(train_dataloader)
+        train_loss = total_train_loss / len(train_dataloader)
 
         # Measure how long this epoch took.
         training_time = format_time(time.time() - t0)
 
         print("")
-        print("  Average training loss: {0:.2f}".format(avg_train_loss))
+        print("  Average training loss: {0:.2f}".format(train_loss))
         print("  Training epoch took: {:}".format(training_time))
 
         # ========================================
@@ -450,49 +450,48 @@ def train_model(model, lr, epochs, train_dataloader, test_dataloader, seed_val=4
             total_test_false_negatives += confusion_matrix[3] / batch_size
 
         # Report the final accuracy for this test run.
-        avg_test_accuracy = total_test_accuracy / len(test_dataloader)
-        print("  Accuracy: {0:.2f}".format(avg_test_accuracy))
-        # Report the final false positives for this test run.
-        avg_test_false_positives = total_test_false_positives / \
-            len(test_dataloader)
-        print("  False Positives: {0:.2f}".format(avg_test_false_positives))
-        # Report the final false negatives for this test run.
-        avg_test_false_negatives = total_test_false_negatives / \
-            len(test_dataloader)
-        print("  False Negatives: {0:.2f}".format(avg_test_false_negatives))
+        test_accuracy = total_test_accuracy / len(test_dataloader)
+        print("  Accuracy: {0:.2f}".format(test_accuracy))
         # True positives and true negatives
-        avg_test_true_positives = total_test_true_positives / \
-            len(test_dataloader)
-        avg_test_true_negatives = total_test_true_negatives / \
-            len(test_dataloader)
+        test_true_positives = total_test_true_positives / \
+            (total_test_true_positives + total_test_false_positives)
+        test_true_negatives = total_test_true_negatives / \
+            (total_test_true_negatives + total_test_false_negatives)
+        # False positives and false negatives
+        test_false_positives = total_test_false_positives / \
+            (total_test_true_positives + total_test_false_positives)
+        print("  False Positives: {0:.2f}".format(test_false_positives))
+        test_false_negatives = total_test_false_negatives / \
+            (total_test_true_negatives + total_test_false_negatives)
+        print("  False Negatives: {0:.2f}".format(test_false_negatives))
         # Report the final precision for this test run.
-        test_precision = avg_test_true_positives / (avg_test_true_positives + avg_test_false_positives)
+        test_precision = test_true_positives / (test_true_positives + test_false_positives)
         print("  Precision: {0:.2f}".format(test_precision))
         # Report the final recall for this test run.
-        test_recall = avg_test_true_positives / (avg_test_true_positives + avg_test_false_negatives)
+        test_recall = test_true_positives / (test_true_positives + test_false_negatives)
         print("  Recall: {0:.2f}".format(test_recall))
         # Report the final F1-score for this test run.
         test_f1 = 2 * (test_precision * test_recall / (test_precision + test_recall))
         print("  F1: {0:.2f}".format(test_f1))
 
         # Calculate the average loss over all of the batches.
-        avg_test_loss = total_test_loss / len(test_dataloader)
+        test_loss = total_test_loss / len(test_dataloader)
 
         # Measure how long the test run took.
         test_time = format_time(time.time() - t0)
 
-        print("  Test Loss: {0:.2f}".format(avg_test_loss))
+        print("  Test Loss: {0:.2f}".format(test_loss))
         print("  Test took: {:}".format(test_time))
 
         # Record all statistics from this epoch.
         training_stats.append(
             {
                 'epoch': epoch_i + 1,
-                'Training Loss': avg_train_loss,
-                'Test Loss': avg_test_loss,
-                'Test Accur.': avg_test_accuracy,
-                'Test False Pos.': avg_test_false_positives,
-                'Test False Neg.': avg_test_false_negatives,
+                'Training Loss': train_loss,
+                'Test Loss': test_loss,
+                'Test Accur.': test_accuracy,
+                'Test False Pos.': test_false_positives,
+                'Test False Neg.': test_false_negatives,
                 'Test Precision': test_precision,
                 'Test Recall': test_recall,
                 'Test F1': test_f1,
