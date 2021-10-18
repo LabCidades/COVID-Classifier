@@ -103,7 +103,6 @@ def get_loader(input_ids, attention_masks, batch_size):
 
 
 def get_predictions(df, model, batch_size):
-    print('Predicting...')
     # Measure how long the prediction takes.
     t0 = time.time()
 
@@ -177,6 +176,8 @@ if __name__ == '__main__':
 
     # Run Stuff
     for year in [2019, 2020, 2021]:
+        print(f"Predicting year: {year}")
+
         df = get_data(year)
         df['label'] = get_predictions(df, model, batch_size=args.batchsize)
         df.to_csv(os.path.join(os.getcwd(), 'predictions',
