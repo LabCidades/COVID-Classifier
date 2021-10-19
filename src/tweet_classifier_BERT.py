@@ -444,10 +444,10 @@ def train_model(model, lr, epochs, train_dataloader, test_dataloader, seed_val=4
             # Calculate the accuracy for this batch of test sentences, and
             # accumulate it over all batches.
             total_test_accuracy += flat_accuracy(logits, label_ids)
-            total_test_true_positives += confusion_matrix[0] / batch_size
-            total_test_true_negatives += confusion_matrix[2] / batch_size
-            total_test_false_positives += confusion_matrix[1] / batch_size
-            total_test_false_negatives += confusion_matrix[3] / batch_size
+            total_test_true_positives += confusion_matrix[0]
+            total_test_true_negatives += confusion_matrix[2]
+            total_test_false_positives += confusion_matrix[1]
+            total_test_false_negatives += confusion_matrix[3]
 
         # Report the final accuracy for this test run.
         test_accuracy = total_test_accuracy / len(test_dataloader)
